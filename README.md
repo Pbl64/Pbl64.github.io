@@ -1,119 +1,65 @@
-# Pbl64.github.io
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Словарь мемов Киберкамбека</title>
-  <meta name="description" content="Мемы, персонажи и предложения Киберкамбека: значения, история появления и примеры.">
-  <meta name="theme-color" content="#111111">
-  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+# Словарь мемов Киберкамбека
 
-  <!-- Шрифты: Literata для заголовков, Inter для текста -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:wght@500;700&display=swap">
-  <link rel="stylesheet" href="css/styles.css">
-  <script src="js/app.js" defer></script>
-</head>
-<body id="top">
-  <a class="skip" href="#search">Перейти к поиску</a>
+Статический сайт: HTML, CSS и чистый JavaScript. Без сборки, npm и сервера.
 
-  <!-- 2.1 Hero -->
-  <header class="hero">
-    <div class="stripe" aria-hidden="true"></div>
-    <div class="wrap hero__inner">
-      <h1>Словарь мемов Киберкамбека</h1>
-      <p class="hero__lead">Разбираемся в мемах, персонажах и предложениях, из которых складывается культура Киберкамбека: что значит каждое, откуда оно взялось и как его используют.</p>
-      <button type="button" class="btn btn--primary hero__btn" id="start">Начать поиск</button>
-      <p class="hero__stats" id="hero-stats"></p>
-    </div>
-  </header>
+```
+index.html          каркас страницы
+css/styles.css      стили (цвета в переменных в начале файла)
+js/app.js           логика (при добавлении записей не трогать)
+data/phrases.json   все записи: единственный файл, который вы правите
+images/favicon.svg  иконка вкладки
+```
 
-  <main>
-    <div class="wrap dictionary" id="dictionary">
-      <!-- Сообщения о загрузке и ошибках -->
-      <div id="status" class="status" role="status">
-        <noscript>Для работы словаря нужен включённый JavaScript.</noscript>
-      </div>
+## Как открыть локально
 
-      <!-- 2.2 Поиск и фильтры -->
-      <h2 class="sr-only">Поиск и фильтры</h2>
-      <div class="search-bar" role="search">
-        <label for="search" class="field-label">Поиск по словарю</label>
-        <div class="search-field">
-          <input id="search" type="search" placeholder="Например: название мема или имя персонажа" autocomplete="off" spellcheck="false">
-          <button type="button" id="clear" class="icon-btn" aria-label="Очистить поиск" hidden>×</button>
-        </div>
-        <p id="count" class="count" aria-live="polite"></p>
-      </div>
+Двойной клик по `index.html` не сработает: браузер не даёт странице читать `data/phrases.json` с диска. Нужен простой локальный сервер:
 
-      <div class="filters">
-        <div>
-          <span class="field-label" id="cat-label">Категория</span>
-          <div class="segmented" id="categories" role="group" aria-labelledby="cat-label"></div>
-        </div>
-        <div class="filters__row">
-          <div>
-            <label for="sort" class="field-label">Сортировка</label>
-            <select id="sort">
-              <option value="alpha">По алфавиту (А–Я)</option>
-              <option value="category">По категории</option>
-            </select>
-          </div>
-          <button type="button" class="btn btn--ghost" id="reset" disabled>Сбросить</button>
-        </div>
-        <p id="cat-hint" class="hint"></p>
-      </div>
+- **Python:** в папке проекта выполните `python -m http.server 8000` и откройте http://localhost:8000
+- **VS Code:** расширение Live Server, кнопка «Go Live».
 
-      <!-- 2.3 Список записей -->
-      <section class="list-section" id="list-section" aria-labelledby="all-title">
-        <h2 id="all-title">Все записи</h2>
-        <div id="list"></div>
+## Как добавить запись
 
-        <div id="empty" class="empty" hidden>
-          <p class="empty__title" id="empty-title"></p>
-          <ul>
-            <li>Проверьте написание.</li>
-            <li>Введите одно слово вместо всей фразы.</li>
-            <li>Выберите «Все» в категориях.</li>
-          </ul>
-          <div class="empty__actions">
-            <button type="button" class="btn btn--primary" id="empty-reset">Сбросить фильтры</button>
-            <a class="link" id="suggest" href="#about">Предложить запись</a>
-          </div>
-        </div>
-      </section>
-    </div>
+1. Откройте `data/phrases.json`.
+2. Найдите слово через Ctrl+F: вдруг запись уже есть.
+3. Скопируйте последний объект в массиве `phrases`, поставьте запятую после предыдущего и заполните поля:
 
-    <!-- 2.4 О словаре -->
-    <section class="about" id="about" aria-labelledby="about-title">
-      <div class="wrap">
-        <h2 id="about-title">О словаре</h2>
-        <p>Словарь мемов Киберкамбека собирает мемы, предложения и персонажей этого вымышленного мира. Для каждой записи мы даём значение, а там, где известно, и историю появления. Пример употребления помогает понять, как это звучит в разговоре.</p>
-        <p>Как пользоваться: введите слово в поиск или выберите категорию. Записи написаны простым языком, без лишних терминов.</p>
-        <p>Нашли неточность или хотите предложить запись? Напишите нам: <a class="link" data-contact href="#about">[контакт]</a>.</p>
-      </div>
-    </section>
-  </main>
+```json
+{
+  "id": "ph-007",
+  "phrase": "Название",
+  "meaning": "Значение в 1–2 предложениях, до 250 символов.",
+  "category": "Мем",
+  "appearing": "Откуда появилось (необязательно)",
+  "example": "Пример употребления (необязательно)"
+}
+```
 
-  <!-- 2.5 Footer -->
-  <footer class="footer">
-    <div class="stripe" aria-hidden="true"></div>
-    <div class="wrap footer__inner">
-      <p class="footer__title">Словарь мемов Киберкамбека</p>
-      <p class="footer__text">Составлен участниками локальной группы Киберкамбек.</p>
-      <nav aria-label="Разделы сайта">
-        <ul class="footer__nav">
-          <li><a href="#search">Поиск</a></li>
-          <li><a href="#all-title">Все записи</a></li>
-          <li><a href="#about">О словаре</a></li>
-        </ul>
-      </nav>
-      <p class="footer__text">Контакт: <a data-contact href="#about">[контакт]</a></p>
-      <p class="footer__text">© 2026 · Обновлено: <span data-updated>[месяц и год]</span></p>
-      <a class="to-top" href="#top">Наверх ↑</a>
-    </div>
-  </footer>
-</body>
-</html>
+Правила:
+
+- `id` в виде `ph-007`: следующий номер по порядку, не меняется и не используется повторно, даже если запись удалена.
+- `phrase` 2–80 символов, без точки в конце. Один объект на одну запись: варианты написания пишите в `meaning`.
+- `category` строго одно из: `Мем`, `Предложение`, `Персонаж`.
+- Пустые `appearing` и `example` можно не указывать, на сайте они не покажутся.
+- Тестовые записи начинаются с «ТЕСТ:». Удалите или замените их.
+- Новая категория добавляется только в списке `categories` и после согласования с группой.
+
+После сохранения обновите страницу. Ошибки и предупреждения (повтор `id`, неверная категория, слишком длинный текст) видны в консоли браузера (F12). Самая частая ошибка: пропущенная запятая между объектами.
+
+## Контакт и дата обновления
+
+В начале `js/app.js` в блоке `CONFIG` замените `contactLabel`, `contactHref` и `updated`. Они подставятся в «О словаре», футер и сообщение об ошибке.
+
+## Как опубликовать на GitHub Pages
+
+1. Создайте на GitHub **публичный** репозиторий (бесплатный Pages работает только с ними).
+2. Загрузите в него содержимое папки проекта так, чтобы `index.html` лежал в корне репозитория.
+3. Откройте Settings → Pages. В Source выберите «Deploy from a branch», ветку `main`, папку `/ (root)`, нажмите Save.
+4. Через 1–2 минуты сайт будет доступен по адресу `https://<пользователь>.github.io/<репозиторий>/`.
+
+После каждого изменения файлов в `main` сайт обновляется сам за 1–2 минуты. Все пути на сайте относительные, поэтому он работает в подпапке репозитория.
+
+## Что проверить перед публикацией
+
+- Палитра и тексты категорий согласованы с группой.
+- Все пары цветов прошли проверку контраста.
+- Страница нормально выглядит на ширине 360, 390, 768, 1024 и 1440 px.

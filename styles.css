@@ -1,0 +1,186 @@
+/* ===== Переменные: палитру можно поменять здесь ===== */
+:root {
+  --bg: #F7F6F2;
+  --card: #FFFFFF;
+  --text: #1A1A1A;
+  --muted: #4B4B4B;
+  --line: #E2E0D8;
+  --control-line: #767676;   /* рамки полей и кнопок, контраст не ниже 3:1 */
+  --dark: #111111;
+  --calm: #ECEAE2;           /* фон блока «О словаре» */
+
+  --green: #2F9E5B;          /* декор */
+  --green-text: #1E7A43;     /* кнопки с белым текстом */
+  --link: #17653A;           /* ссылки на светлом фоне */
+  --red: #D7263D;
+  --orange: #F28C28;
+
+  --meme-bg: #E3F4EA;  --meme-fg: #1E7A43;
+  --sent-bg: #FDEBD9;  --sent-fg: #B35A00;
+  --char-bg: #FBE3E6;  --char-fg: #B0182C;
+
+  --font-head: "Literata", Georgia, "Times New Roman", serif;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --max: 1200px;
+}
+
+/* ===== База ===== */
+*, *::before, *::after { box-sizing: border-box; }
+html { font-size: 100%; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 1rem/1.55 var(--font-ui); }
+[hidden] { display: none !important; }
+h1, h2, h3, h4 { font-family: var(--font-head); margin: 0; }
+p { margin: 0; }
+
+.wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 1rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Видимый фокус для клавиатуры */
+:focus-visible { outline: 3px solid var(--green-text); outline-offset: 2px; }
+.hero :focus-visible, .footer :focus-visible { outline-color: var(--orange); }
+
+.skip { position: absolute; left: 1rem; top: -4rem; z-index: 20; background: #fff; color: var(--text); padding: .75rem 1rem; border-radius: 8px; }
+.skip:focus { top: 1rem; }
+
+.link { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Полоса из трёх фирменных цветов */
+.stripe { height: 6px; background: linear-gradient(90deg, var(--green) 0 33.33%, var(--orange) 33.33% 66.66%, var(--red) 66.66% 100%); }
+
+/* ===== Кнопки ===== */
+.btn { min-height: 48px; padding: .6rem 1.25rem; border: 2px solid transparent; border-radius: 10px; font: 600 1rem var(--font-ui); cursor: pointer; }
+.btn--primary { background: var(--green-text); color: #fff; }
+.btn--primary:hover { background: #185F36; }
+.btn--ghost { background: transparent; color: var(--text); border-color: var(--control-line); }
+.btn--ghost:hover:not(:disabled) { background: #fff; }
+.btn:disabled { color: #6B6B6B; border-color: var(--line); cursor: not-allowed; }
+
+/* ===== Hero ===== */
+.hero { background: var(--dark); color: #fff; }
+.hero__inner { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+.hero h1 { font-size: 1.75rem; line-height: 1.15; font-weight: 700; margin-bottom: 1rem; }
+.hero__lead { max-width: 38rem; font-size: 1.0625rem; color: #E8E6DE; margin-bottom: 1.5rem; }
+.hero__btn { width: 100%; }
+.hero__stats { margin-top: 1rem; font-size: .9375rem; color: #C9C7BE; }
+
+/* ===== Поиск и фильтры ===== */
+.dictionary { padding-top: 1.5rem; }
+.status:empty { display: none; }
+.status { background: #fff; border: 2px solid var(--red); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+
+.search-bar { padding-bottom: .75rem; background: var(--bg); }
+.field-label { display: block; font-size: .9375rem; font-weight: 600; margin-bottom: .35rem; }
+.search-field { position: relative; }
+input[type="search"] {
+  width: 100%; min-height: 48px; padding: .6rem 3rem .6rem .9rem;
+  font: 1rem var(--font-ui); color: var(--text); background: #fff;
+  border: 2px solid var(--control-line); border-radius: 10px; -webkit-appearance: none; appearance: none;
+}
+input[type="search"]::-webkit-search-cancel-button { display: none; }
+.icon-btn { position: absolute; right: 2px; top: 2px; width: 44px; height: 44px; border: 0; background: transparent; font-size: 1.75rem; line-height: 1; color: var(--text); cursor: pointer; border-radius: 8px; }
+.count { margin-top: .5rem; font-size: .9375rem; color: var(--muted); }
+
+.filters { display: grid; gap: 1rem; }
+.filters__row { display: grid; grid-template-columns: 1fr auto; gap: .75rem; align-items: end; }
+.hint { font-size: .9375rem; color: var(--muted); }
+.hint:empty { display: none; }
+
+/* Переключатель категорий: сетка 2×2 на телефоне, одна строка с 480 px */
+.segmented { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; background: var(--control-line); border: 2px solid var(--control-line); border-radius: 10px; overflow: hidden; }
+.seg { min-height: 48px; padding: .4rem .5rem; border: 0; background: #fff; color: var(--text); font: 500 .9375rem var(--font-ui); cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 .35em; }
+.seg:hover { background: #F1EFE8; }
+.seg[aria-pressed="true"] { background: var(--dark); color: #fff; }
+.seg[aria-pressed="true"]::before { content: "✓"; }   /* состояние видно не только цветом */
+.seg:focus-visible { outline-offset: -3px; }
+
+select {
+  width: 100%; min-height: 48px; padding: .5rem .75rem; font: 1rem var(--font-ui); color: var(--text);
+  background: #fff; border: 2px solid var(--control-line); border-radius: 10px;
+}
+
+/* ===== Список ===== */
+.list-section { padding-top: 1.75rem; }
+.list-section h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+.cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+
+.card { --accent: var(--green); --tag-bg: var(--meme-bg); --tag-fg: var(--meme-fg);
+  background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--accent);
+  border-radius: 12px; padding: 1rem; scroll-margin-top: 6rem; }
+.card--sentence { --accent: var(--orange); --tag-bg: var(--sent-bg); --tag-fg: var(--sent-fg); }
+.card--character { --accent: var(--red); --tag-bg: var(--char-bg); --tag-fg: var(--char-fg); }
+.card:hover { border-color: #B8B5A9; border-top-color: var(--accent); }
+.card:target { outline: 3px solid var(--accent); }
+
+.card__title { font-size: 1.1875rem; line-height: 1.25; font-weight: 700; margin-bottom: .5rem; overflow-wrap: anywhere; }
+.tag { display: inline-block; padding: .15rem .7rem; margin-bottom: .75rem; border-radius: 999px; background: var(--tag-bg); color: var(--tag-fg); font-size: .875rem; font-weight: 600; }
+.meaning { max-width: 65ch; line-height: 1.6; overflow-wrap: anywhere; }
+.label { display: block; font-size: .875rem; font-weight: 600; color: var(--muted); margin-bottom: .15rem; }
+.origin, .example { margin-top: .9rem; font-size: .9375rem; overflow-wrap: anywhere; }
+.example { padding-left: .75rem; border-left: 3px solid var(--accent); }
+mark { background: #FFE9A8; color: inherit; border-radius: 3px; padding: 0 .1em; }
+
+.group { --accent: var(--green); }
+.group.card--sentence { --accent: var(--orange); }
+.group.card--character { --accent: var(--red); }
+.group__title { font-size: 1.25rem; margin: 1.75rem 0 .75rem; padding-bottom: .35rem; border-bottom: 3px solid var(--accent); }
+.group:first-child .group__title { margin-top: 0; }
+
+/* Пустое состояние */
+.empty { background: #fff; border: 1px dashed var(--control-line); border-radius: 12px; padding: 1.25rem; }
+.empty__title { font: 700 1.125rem var(--font-head); margin-bottom: .75rem; overflow-wrap: anywhere; }
+.empty ul { margin: 0 0 1rem; padding-left: 1.25rem; }
+.empty__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem; }
+.empty__actions .link { display: inline-flex; min-height: 44px; align-items: center; }
+
+/* ===== О словаре ===== */
+.about { background: var(--calm); margin-top: 3rem; padding: 2.5rem 0; }
+.about h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+.about p { max-width: 65ch; margin-bottom: 1rem; }
+.about p:last-child { margin-bottom: 0; }
+
+/* ===== Footer ===== */
+.footer { background: var(--dark); color: #fff; }
+.footer__inner { padding-top: 2rem; padding-bottom: 2rem; display: grid; gap: .75rem; justify-items: start; }
+.footer__title { font: 700 1.25rem var(--font-head); }
+.footer__text { color: #D9D7CE; font-size: .9375rem; }
+.footer a { color: #fff; text-underline-offset: 3px; }
+.footer__nav { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
+.footer__nav a { display: inline-flex; min-height: 44px; align-items: center; }
+.to-top { display: inline-flex; min-height: 44px; align-items: center; padding: .5rem 1rem; border: 2px solid #fff; border-radius: 10px; text-decoration: none; font-weight: 600; }
+
+/* ===== Адаптивность ===== */
+@media (min-width: 480px) {
+  .segmented { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 768px) {
+  .wrap { padding: 0 1.5rem; }
+  .hero__inner { padding-top: 4rem; padding-bottom: 3.5rem; }
+  .hero h1 { font-size: 3rem; }
+  .hero__lead { font-size: 1.1875rem; }
+  .hero__btn { width: auto; min-width: 14rem; }
+  .search-bar { display: grid; grid-template-columns: 1fr auto; column-gap: 1rem; align-items: center; }
+  .search-bar .field-label { grid-column: 1 / -1; }
+  .count { margin-top: 0; }
+  .filters { grid-template-columns: 1fr 1fr; align-items: end; }
+  .hint { grid-column: 1 / -1; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+  .card { padding: 1.25rem; }
+  .card__title { font-size: 1.3125rem; }
+  .meaning { font-size: 1.0625rem; }
+  .origin, .example { font-size: 1rem; }
+}
+@media (min-width: 1024px) {
+  .hero__inner { min-height: min(45vh, 26rem); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+  .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Липкая полоса поиска только на десктопе */
+  .search-bar { position: sticky; top: 0; z-index: 5; padding: .75rem 0; border-bottom: 1px solid var(--line); }
+  .card { scroll-margin-top: 8rem; }
+}
+
+/* Если словарь не загрузился, фильтры и список скрываются */
+.is-failed .search-bar, .is-failed .filters, .is-failed .list-section { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
