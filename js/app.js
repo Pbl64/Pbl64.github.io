@@ -6,9 +6,9 @@
   const CONFIG = {
     dataUrl: 'data/phrases.json',            // путь без начального слеша (важно для GitHub Pages)
     debounceMs: 180,                         // задержка поиска при вводе
-    contactLabel: 'example@example.com',     // [контакт]: текст ссылки
-    contactHref: 'mailto:example@example.com', // [контакт]: адрес ссылки (почта, Telegram и т. д.)
-    updated: '[месяц и год]'                 // «Обновлено: …» в футере
+    contactLabel: 'kiberkambek@gmail.com',     // [контакт]: текст ссылки
+    contactHref: 'mailto:kiberkambek@gmail.com', // [контакт]: адрес ссылки (почта, Telegram и т. д.)
+    updated: 'октябрь 2026'                 // «Обновлено: …» в футере
   };
 
   // Класс карточки по названию категории
