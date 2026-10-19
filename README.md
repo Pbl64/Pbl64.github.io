@@ -1,3 +1,5 @@
+### maybe rewrite this later. read ai text if u want
+
 # Словарь мемов Киберкамбека
 
 Статический сайт: HTML, CSS и чистый JavaScript. Без сборки, npm и сервера.
