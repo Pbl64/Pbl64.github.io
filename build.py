@@ -24,7 +24,7 @@ from pathlib import Path
 CONFIG = {
     # Адрес сайта без слэша на конце, например "https://username.github.io/repo".
     # Нужен для превью ссылок в Telegram/ВК и для sitemap.xml. Пусто — они не создаются.
-    "site_url": "",
+    "site_url": "https://pbl64.github.io",
     "site_name": "Словарь мемов Киберкамбека",
     # Картинка для превью ссылок (лучше 1200×630), путь от корня сайта, например "images/og.png".
     "og_image": "",
