@@ -6,6 +6,8 @@
   const CONFIG = {
     dataUrl: 'data/phrases.json',            // путь без начального слеша (важно для GitHub Pages)
     debounceMs: 180,                         // задержка поиска при вводе
+    formEndpoint: 'https://api.web3forms.com/submit', // сервис приёма форм Web3Forms
+    formKey: 'bc55497d-6004-4245-83db-1caeb8e25ed8',   // публичный ключ Web3Forms (его можно хранить в коде)
     contactLabel: 'kiberkambek@gmail.com',     // [контакт]: текст ссылки
     contactHref: 'mailto:kiberkambek@gmail.com', // [контакт]: адрес ссылки (почта, Telegram и т. д.)
     updated: 'октябрь 2026'                 // «Обновлено: …» в футере
@@ -301,6 +303,135 @@
     });
   }
 
+  // ===== Форма «Предложить запись» (Web3Forms) =====
+  function initSuggestForm() {
+    const form = $('proposal');
+    if (!form) return;
+    const statusEl = $('form-status');
+    const btn = $('submit-btn');
+    const counter = $('meaning-counter');
+    const COOLDOWN_MS = 30000; // пауза после успешной отправки
+    let sending = false;
+
+    // Поля формы: id, название поля в письме, обязательность
+    const fields = [
+      { id: 'f-phrase', name: 'Название', required: true },
+      { id: 'f-category', name: 'Категория', required: true },
+      { id: 'f-meaning', name: 'Значение', required: true },
+      { id: 'f-appearing', name: 'Происхождение' },
+      { id: 'f-example', name: 'Пример' },
+      { id: 'f-author', name: 'Автор' }
+    ];
+    fields.forEach((f) => { f.input = $(f.id); f.error = $(f.id + '-error'); });
+
+    function setError(f, msg) {
+      f.error.textContent = '⚠ ' + msg; // значок, чтобы ошибка была видна не только цветом
+      f.error.hidden = false;
+      f.input.setAttribute('aria-invalid', 'true');
+    }
+    function clearError(f) {
+      f.error.textContent = '';
+      f.error.hidden = true;
+      f.input.removeAttribute('aria-invalid');
+    }
+    // Возвращает текст ошибки или пустую строку
+    function check(f) {
+      const v = f.input.value.trim();
+      if (f.required && !v) return f.id === 'f-category' ? 'Выберите категорию.' : 'Заполните это поле.';
+      if (f.id === 'f-phrase') {
+        if (v.length < 2) return 'Название должно быть не короче 2 символов.';
+        if (/\.$/.test(v)) return 'Уберите точку в конце названия.';
+      }
+      return '';
+    }
+    function showStatus(type, msg) {
+      statusEl.className = 'form-status form-status--' + type;
+      statusEl.setAttribute('role', type === 'ok' ? 'status' : 'alert');
+      statusEl.textContent = (type === 'ok' ? '✓ ' : '⚠ ') + msg;
+    }
+    function clearStatus() {
+      statusEl.className = 'form-status';
+      statusEl.textContent = '';
+    }
+    function updateCounter() { counter.textContent = `${fields[2].input.value.length} / 250`; }
+
+    // Ошибка пропадает, когда человек начинает исправлять поле
+    fields.forEach((f) => {
+      f.input.addEventListener('input', () => { clearError(f); if (f.id === 'f-meaning') updateCounter(); });
+      f.input.addEventListener('change', () => clearError(f));
+    });
+
+    // Пустой результат поиска: «Предложить запись» ведёт к форме и подставляет запрос
+    el.suggest.addEventListener('click', (e) => {
+      e.preventDefault();
+      const q = state.q.trim();
+      if (q && !fields[0].input.value) { fields[0].input.value = q.slice(0, 80); }
+      $('suggest-form').scrollIntoView();
+      fields[0].input.focus({ preventScroll: true });
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (sending) return;
+      clearStatus();
+
+      // Проверка на стороне браузера; фокус на первое ошибочное поле
+      let firstBad = null;
+      fields.forEach((f) => {
+        const msg = check(f);
+        if (msg) { setError(f, msg); firstBad = firstBad || f; } else clearError(f);
+      });
+      if (firstBad) { firstBad.input.focus(); return; }
+
+      // Ловушка для ботов: делаем вид, что всё прошло, но ничего не отправляем
+      if ($('botcheck').checked) { showStatus('ok', 'Спасибо! Предложение отправлено на проверку.'); form.reset(); updateCounter(); return; }
+
+      const payload = {
+        access_key: CONFIG.formKey,
+        subject: 'Новое предложение в Словарь мемов Киберкамбека',
+        from_name: 'Словарь мемов Киберкамбека'
+      };
+      fields.forEach((f) => { const v = f.input.value.trim(); if (v) payload[f.name] = v; }); // пустые поля не шлём
+
+      sending = true;
+      btn.disabled = true;
+      btn.textContent = 'Отправляем…';
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 15000);
+      let ok = false;
+      try {
+        const res = await fetch(CONFIG.formEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal
+        });
+        const data = await res.json().catch(() => ({}));
+        ok = res.ok && data.success === true;
+        if (!ok) console.error('Web3Forms вернул ошибку:', res.status, data);
+      } catch (err) {
+        console.error('Не удалось отправить форму:', err);
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      sending = false;
+      if (ok) {
+        showStatus('ok', 'Спасибо! Предложение отправлено на проверку.');
+        form.reset();
+        updateCounter();
+        // Пауза, чтобы форму не отправляли подряд
+        btn.textContent = 'Подождите немного…';
+        setTimeout(() => { btn.disabled = false; btn.textContent = 'Отправить'; }, COOLDOWN_MS);
+      } else {
+        // Введённые данные сохраняются, можно попробовать ещё раз
+        showStatus('error', 'Не получилось отправить. Проверьте соединение и попробуйте ещё раз.');
+        btn.disabled = false;
+        btn.textContent = 'Отправить';
+      }
+    });
+  }
+
   // ===== Контакты, ошибки, запуск =====
   function fillConfigTexts() {
     document.querySelectorAll('[data-contact]').forEach((a) => {
@@ -308,7 +439,7 @@
       if (a.tagName === 'A') a.href = CONFIG.contactHref;
     });
     document.querySelectorAll('[data-updated]').forEach((s) => { s.textContent = CONFIG.updated; });
-    el.suggest.href = CONFIG.contactHref;
+    el.suggest.href = '#suggest-form';
   }
 
   function showError() {
@@ -322,6 +453,7 @@
   async function init() {
     fillConfigTexts();
     bindEvents(); // кнопка «Начать поиск» работает сразу
+    initSuggestForm(); // форма работает независимо от загрузки словаря
     try {
       ({ categories, items } = validate(await loadData()));
       if (!items.length) throw new Error('Нет ни одной корректной записи');
