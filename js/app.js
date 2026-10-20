@@ -61,6 +61,7 @@
 
     const catNames = new Set(cats.map((c) => c.name));
     const ids = new Set();
+    const slugs = new Set();
     const phraseKeys = new Map();
     const result = [];
 
@@ -89,10 +90,16 @@
         if (typeof r[k] !== 'string') { console.warn(`${where}: поле ${k} должно быть строкой.`); return ''; }
         return r[k].trim();
       };
+      // slug – часть адреса страницы (entry/<slug>/). Нет или неверный – берём id, как build.py
+      let slug = optional('slug');
+      if (!slug) slug = r.id;
+      else if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) { console.warn(`${where}: slug «${slug}» неверный (только a–z, 0–9 и дефисы). Взят id.`); slug = r.id; }
+      if (slugs.has(slug)) console.warn(`${where}: slug «${slug}» уже занят другой записью.`);
+      slugs.add(slug);
       const appearing = optional('appearing');
       const example = optional('example');
       result.push({
-        id: r.id, phrase: r.phrase.trim(), meaning: r.meaning.trim(), category: r.category,
+        id: r.id, slug, phrase: r.phrase.trim(), meaning: r.meaning.trim(), category: r.category,
         appearing, example,
         hay: fold([r.phrase, r.meaning, appearing].join('\n')) // поиск: phrase + meaning + appearing
       });
@@ -148,29 +155,35 @@
     return n;
   }
 
+  // Адрес страницы записи (файлы создаёт build.py). Относительный путь работает и на GitHub Pages
+  const entryUrl = (it) => 'entry/' + encodeURIComponent(it.slug) + '/';
+
   function makeCard(it, headingTag, tokens) {
     const li = make('li', 'card ' + (CAT_CLASS[it.category] || ''));
-    li.id = it.id;
 
+    // Обычная ссылка в том же окне (без target). CSS растягивает её на всю карточку
+    const a = make('a', 'card__link');
+    a.href = entryUrl(it);
+    appendHighlighted(a, it.phrase, tokens);
     const h = make(headingTag, 'card__title');
-    appendHighlighted(h, it.phrase, tokens);
+    h.append(a);
     li.append(h, make('span', 'tag', it.category));
 
-    const meaning = make('p', 'meaning');
+    const meaning = make('p', 'meaning meaning--clamp'); // текст обрезается в CSS
     appendHighlighted(meaning, it.meaning, tokens);
     li.append(meaning);
 
-    if (it.appearing) {
-      const p = make('p', 'origin');
+    // Происхождение на карточке не показываем, кроме случая, когда запрос найден именно в нём
+    if (it.appearing && tokens.some((t) => fold(it.appearing).includes(t))) {
+      const p = make('p', 'origin origin--clamp');
       p.append(make('span', 'label', 'Происхождение'));
       appendHighlighted(p, it.appearing, tokens);
       li.append(p);
     }
-    if (it.example) {
-      const p = make('p', 'example');
-      p.append(make('span', 'label', 'Пример'), it.example);
-      li.append(p);
-    }
+
+    const more = make('p', 'more', 'Подробнее →');
+    more.setAttribute('aria-hidden', 'true'); // ссылка уже есть в заголовке
+    li.append(more);
     return li;
   }
 
@@ -260,6 +273,20 @@
     try { history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) { /* file:// и т. п. */ }
   }
 
+  // ===== Положение прокрутки при возврате со страницы записи =====
+  const SCROLL_KEY = 'kk-list-scroll';
+  function saveScroll() {
+    try { sessionStorage.setItem(SCROLL_KEY, JSON.stringify({ search: location.search, y: window.scrollY })); } catch (e) { /* хранилище недоступно */ }
+  }
+  function restoreScroll() {
+    try {
+      const nav = performance.getEntriesByType('navigation')[0];
+      if (!nav || nav.type !== 'back_forward') return; // только «Назад/Вперёд»
+      const saved = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || 'null');
+      if (saved && saved.search === location.search) window.scrollTo({ top: saved.y, behavior: 'instant' });
+    } catch (e) { /* ничего страшного */ }
+  }
+
   // ===== События =====
   function resetAll() {
     Object.assign(state, DEFAULTS);
@@ -292,6 +319,7 @@
       state.category = b.dataset.cat;
       render();
     });
+    el.list.addEventListener('click', (e) => { if (e.target.closest('.card__link')) saveScroll(); });
     el.sort.addEventListener('change', () => { state.sort = el.sort.value; render(); });
     el.reset.addEventListener('click', resetAll);
     el.emptyReset.addEventListener('click', resetAll);
@@ -463,17 +491,17 @@
       return;
     }
 
+    // Старые ссылки вида #ph-001 ведут на страницу записи
+    const old = location.hash.length > 1 && items.find((it) => '#' + it.id === location.hash);
+    if (old) { location.replace(entryUrl(old)); return; }
+
     const n = items.length, c = categories.length;
     el.heroStats.textContent = `${n} ${plural(n, 'запись', 'записи', 'записей')} · ${c} ${plural(c, 'категория', 'категории', 'категорий')}`;
     buildCategoryButtons();
     readUrl();
     render();
 
-    // Переход по якорю вида #ph-001 (карточки появились уже после загрузки страницы)
-    try {
-      const target = location.hash.length > 1 && document.getElementById(decodeURIComponent(location.hash.slice(1)));
-      if (target && target.classList.contains('card')) target.scrollIntoView();
-    } catch (e) { /* неверный якорь игнорируем */ }
+    restoreScroll();
   }
 
   init();
