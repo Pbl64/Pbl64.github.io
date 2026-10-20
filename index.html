@@ -85,6 +85,70 @@
       </section>
     </div>
 
+    <!-- Форма предложения записи (Web3Forms) -->
+    <section class="suggest" id="suggest-form" aria-labelledby="suggest-title">
+      <div class="wrap">
+        <div class="suggest__card">
+          <h2 id="suggest-title">Предложить запись</h2>
+          <p class="suggest__lead">Знаете мем, персонажа или фразу, которых ещё нет в словаре? Заполните форму. Мы проверим запись и добавим её вручную, поэтому она появится не сразу.</p>
+
+          <form id="proposal" novalidate>
+            <!-- Ловушка для ботов: людям не видна -->
+            <input type="checkbox" name="botcheck" id="botcheck" class="hp" tabindex="-1" autocomplete="off" hidden>
+
+            <div class="field">
+              <label for="f-phrase">Название <span class="req">обязательно</span></label>
+              <p class="field__hint" id="f-phrase-hint">Мем, персонаж или предложение, как его называют в группе. Без точки в конце.</p>
+              <input type="text" id="f-phrase" name="Название" required minlength="2" maxlength="80" autocomplete="off" aria-describedby="f-phrase-hint f-phrase-error">
+              <p class="field__error" id="f-phrase-error" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="f-category">Категория <span class="req">обязательно</span></label>
+              <select id="f-category" name="Категория" required aria-describedby="f-category-error">
+                <option value="" selected disabled>Выберите категорию</option>
+                <option value="Мем">Мем</option>
+                <option value="Предложение">Предложение</option>
+                <option value="Персонаж">Персонаж</option>
+              </select>
+              <p class="field__error" id="f-category-error" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="f-meaning">Значение <span class="req">обязательно</span></label>
+              <p class="field__hint" id="f-meaning-hint">Что это значит, в 1–2 предложениях.</p>
+              <textarea id="f-meaning" name="Значение" required maxlength="250" rows="4" aria-describedby="f-meaning-hint f-meaning-error"></textarea>
+              <p class="counter" id="meaning-counter">0 / 250</p>
+              <p class="field__error" id="f-meaning-error" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="f-appearing">Откуда появилось <span class="req">необязательно</span></label>
+              <p class="field__hint" id="f-appearing-hint">Где и когда это впервые встретилось.</p>
+              <textarea id="f-appearing" name="Происхождение" maxlength="400" rows="3" aria-describedby="f-appearing-hint f-appearing-error"></textarea>
+              <p class="field__error" id="f-appearing-error" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="f-example">Пример употребления <span class="req">необязательно</span></label>
+              <textarea id="f-example" name="Пример" maxlength="300" rows="2" aria-describedby="f-example-error"></textarea>
+              <p class="field__error" id="f-example-error" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="f-author">Ваше имя или ник <span class="req">необязательно</span></label>
+              <p class="field__hint" id="f-author-hint">Увидит только владелец словаря.</p>
+              <input type="text" id="f-author" name="Автор" maxlength="50" autocomplete="nickname" aria-describedby="f-author-hint f-author-error">
+              <p class="field__error" id="f-author-error" hidden></p>
+            </div>
+
+            <div class="form-status" id="form-status" role="status" aria-live="polite"></div>
+            <button type="submit" class="btn btn--primary suggest__btn" id="submit-btn">Отправить</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <!-- 2.4 О словаре -->
     <section class="about" id="about" aria-labelledby="about-title">
       <div class="wrap">
@@ -106,6 +170,7 @@
         <ul class="footer__nav">
           <li><a href="#search">Поиск</a></li>
           <li><a href="#all-title">Все записи</a></li>
+          <li><a href="#suggest-form">Предложить запись</a></li>
           <li><a href="#about">О словаре</a></li>
         </ul>
       </nav>
