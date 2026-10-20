@@ -1,0 +1,4 @@
+# Создаётся скриптом build.py (на GitHub — через Actions)
+entry/
+sitemap.xml
+__pycache__/
