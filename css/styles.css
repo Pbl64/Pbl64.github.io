@@ -132,6 +132,34 @@ mark { background: #FFE9A8; color: inherit; border-radius: 3px; padding: 0 .1em;
 .empty__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem; }
 .empty__actions .link { display: inline-flex; min-height: 44px; align-items: center; }
 
+/* ===== Форма «Предложить запись» ===== */
+.suggest { margin-top: 3rem; }
+.suggest__card { max-width: 44rem; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--green); border-radius: 12px; padding: 1rem; }
+.suggest h2 { font-size: 1.5rem; margin-bottom: .75rem; }
+.suggest__lead { max-width: 65ch; margin-bottom: 1.5rem; }
+.field { margin-bottom: 1.25rem; }
+.field label { display: block; font-weight: 600; margin-bottom: .25rem; }
+.req { font-weight: 400; font-size: .875rem; color: var(--muted); margin-left: .35rem; }
+.field__hint { font-size: .9375rem; color: var(--muted); margin-bottom: .4rem; }
+.field input[type="text"], .field textarea {
+  width: 100%; min-height: 48px; padding: .6rem .8rem; font: 1rem/1.5 var(--font-ui); color: var(--text);
+  background: #fff; border: 2px solid var(--control-line); border-radius: 10px;
+}
+.field textarea { resize: vertical; }
+.field select { width: 100%; }
+.field [aria-invalid="true"] { border-color: var(--char-fg); }
+.field__error { margin-top: .4rem; font-size: .9375rem; font-weight: 600; color: var(--char-fg); }
+.counter { margin-top: .25rem; font-size: .875rem; color: var(--muted); text-align: right; }
+.form-status { margin-bottom: 1rem; padding: .75rem 1rem; border-radius: 10px; font-weight: 500; }
+.form-status:empty { display: none; }
+.form-status--ok { background: var(--meme-bg); color: var(--meme-fg); }
+.form-status--error { background: var(--char-bg); color: var(--char-fg); }
+.suggest__btn { width: 100%; }
+@media (min-width: 768px) {
+  .suggest__card { padding: 1.5rem; }
+  .suggest__btn { width: auto; min-width: 12rem; }
+}
+
 /* ===== О словаре ===== */
 .about { background: var(--calm); margin-top: 3rem; padding: 2.5rem 0; }
 .about h2 { font-size: 1.5rem; margin-bottom: 1rem; }
