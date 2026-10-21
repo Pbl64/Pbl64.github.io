@@ -255,7 +255,9 @@
             "date": "июль 2023",
             "example": "",
             "links": [],
-            "images": []
+            "images": [
+                {"src": "images/memes/legendarnyy-arhiv/1.webp", "alt": "1", "caption": "Аватарка группы"}
+            ]
         },
         {
             "id": "ph-020",
