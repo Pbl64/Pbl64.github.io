@@ -233,7 +233,7 @@ mark { background: #FFE9A8; color: inherit; border-radius: 3px; padding: 0 .1em;
 
 /* Карточка слева; галерея справа (десктоп) или под карточкой (телефон, планшет) */
 .entry__layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: start; }
-.entry__card { display: block; width: 100%; max-width: 57.2rem; margin: 0; padding: 1.25rem; }  /* 52rem + 10% */
+.entry__card { display: block; width: 100%; max-width: 50rem; margin: 0; padding: 1.25rem; }  /* 52rem + 10% */
 .entry__card:hover { border-color: var(--line); border-top-color: var(--accent); }
 .entry__title { font-size: 1.75rem; line-height: 1.15; margin-bottom: .6rem; overflow-wrap: anywhere; }
 
