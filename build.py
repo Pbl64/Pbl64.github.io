@@ -2,15 +2,23 @@
 """Генератор страниц записей для «Словаря мемов Киберкамбека».
 
 Что делает:
-  data/phrases.json  (+ необязательно data/entries/<id>.json)
-      →  entry/<slug>/index.html  для каждой записи
-      →  sitemap.xml              (только если указан site_url)
+  data/phrases.json  →  entry/<slug>/index.html  для каждой записи
+                     →  sitemap.xml              (только если указан site_url)
 
 Запуск:  python build.py
 Нужен только Python 3.8+, сторонние библиотеки не нужны.
 
-Подробный текст, ссылки и галерея лежат в data/entries/<id>.json
-(например, data/entries/ph-004.json). Пример: data/entries/_example.json.
+Все данные записи лежат в одном файле data/phrases.json. Кроме основных полей
+(id, slug, phrase, meaning, category, appearing, example) у записи есть:
+
+  "date":   "декабрь 2024"          – дата появления, выводится рядом с «Происхождением»
+  "links":  [{"text": "Название источника", "url": "https://..."}]
+                                      – выводятся в тексте через запятую
+  "images": [{"src": "images/memes/slug/1.jpg", "alt": "Описание", "caption": "Подпись"}]
+                                      – локальные файлы (путь от корня сайта) или https-ссылки;
+                                        width и height необязательны
+
+Пустые поля ("", []) на странице не выводятся.
 """
 import json
 import re
@@ -36,7 +44,6 @@ CONFIG = {
 
 ROOT = Path(__file__).resolve().parent
 DATA_FILE = ROOT / "data" / "phrases.json"
-ENTRIES_DIR = ROOT / "data" / "entries"
 OUT_DIR = ROOT / "entry"
 SITEMAP = ROOT / "sitemap.xml"
 
@@ -75,11 +82,8 @@ def short_text(text, limit=160):
 
 
 def paragraphs(value):
-    """Строка (абзацы через пустую строку) или список строк → HTML."""
-    if isinstance(value, list):
-        parts = [clean_str(v) for v in value]
-    else:
-        parts = re.split(r"\n\s*\n", clean_str(value))
+    """Строка (абзацы через пустую строку) → HTML."""
+    parts = re.split(r"\n\s*\n", clean_str(value))
     return "".join("<p>" + e(p).replace("\n", "<br>") + "</p>" for p in parts if p)
 
 
@@ -92,19 +96,43 @@ def asset_url(src):
 
 
 # ===== Чтение данных =====
-def load_entry_extra(rec_id):
-    path = ENTRIES_DIR / (rec_id + ".json")
-    if not path.is_file():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except ValueError as err:
-        fail(f"{path.name}: неверный JSON ({err})")
-        return {}
-    if not isinstance(data, dict):
-        fail(f"{path.name}: ожидался объект {{...}}")
-        return {}
-    return data
+def clean_links(items, where):
+    if items in (None, ""):
+        return []
+    if not isinstance(items, list):
+        warn(f"{where}: links должен быть списком. Пропущено.")
+        return []
+    out = []
+    for it in items:
+        text = clean_str(it.get("text")) if isinstance(it, dict) else ""
+        url = clean_str(it.get("url")) if isinstance(it, dict) else ""
+        if not text or not re.match(r"^(https?://|mailto:)", url):
+            warn(f"{where}: ссылка пропущена (нужны text и url, начинающийся с http:// или https://).")
+            continue
+        out.append({"text": text, "url": url})
+    return out
+
+
+def clean_images(items, where):
+    if items in (None, ""):
+        return []
+    if not isinstance(items, list):
+        warn(f"{where}: images должен быть списком. Пропущено.")
+        return []
+    out = []
+    for it in items:
+        src = clean_str(it.get("src")) if isinstance(it, dict) else ""
+        if not src:
+            warn(f"{where}: картинка без src пропущена.")
+            continue
+        alt = clean_str(it.get("alt"))
+        if not alt:
+            warn(f"{where}: у картинки {src} нет alt (описания для скринридеров).")
+        if not re.match(r"^https?://", src) and not (ROOT / src.lstrip("/")).is_file():
+            warn(f"{where}: файл {src} не найден.")
+        out.append({"src": src, "alt": alt, "caption": clean_str(it.get("caption")),
+                    "width": it.get("width"), "height": it.get("height")})
+    return out
 
 
 def load_records():
@@ -141,56 +169,26 @@ def load_records():
             continue
         slugs[slug] = r["id"]
 
-        rec = {k: clean_str(r.get(k)) for k in ("id", "phrase", "meaning", "category", "appearing", "example")}
+        rec = {k: clean_str(r.get(k)) for k in ("id", "phrase", "meaning", "category", "appearing", "date", "example")}
         rec["slug"] = slug
-
-        extra = load_entry_extra(r["id"])
-        rec["body"] = extra.get("body", "")
-        rec["links"] = clean_links(extra.get("links"), where)
-        rec["gallery"] = clean_gallery(extra.get("gallery"), where)
+        rec["links"] = clean_links(r.get("links"), where)
+        rec["images"] = clean_images(r.get("images"), where)
         records.append(rec)
     return records
 
 
-def clean_links(items, where):
-    out = []
-    for it in items or []:
-        title, url = clean_str(it.get("title")) if isinstance(it, dict) else "", clean_str(it.get("url")) if isinstance(it, dict) else ""
-        if not title or not re.match(r"^(https?://|mailto:)", url):
-            warn(f"{where}: ссылка пропущена (нужны title и url, начинающийся с http:// или https://).")
-            continue
-        out.append({"title": title, "url": url, "note": clean_str(it.get("note"))})
-    return out
-
-
-def clean_gallery(items, where):
-    out = []
-    for it in items or []:
-        src = clean_str(it.get("src")) if isinstance(it, dict) else ""
-        if not src:
-            warn(f"{where}: элемент галереи без src пропущен.")
-            continue
-        alt = clean_str(it.get("alt"))
-        if not alt:
-            warn(f"{where}: у картинки {src} нет alt (описания для скринридеров).")
-        if not re.match(r"^https?://", src) and not (ROOT / src.lstrip("/")).is_file():
-            warn(f"{where}: файл {src} не найден.")
-        out.append({"src": src, "alt": alt, "caption": clean_str(it.get("caption")),
-                    "width": it.get("width"), "height": it.get("height")})
-    return out
-
-
 # ===== Шаблон страницы =====
-def section(title, inner):
-    return f'<section class="entry__section"><h2 class="entry__h">{e(title)}</h2>{inner}</section>'
+def section(title, inner, extra=""):
+    head = f'<h2 class="entry__h">{e(title)}</h2>'
+    if extra:
+        head = f'<div class="entry__head">{head}{extra}</div>'
+    return f'<section class="entry__section">{head}{inner}</section>'
 
 
 def render_links(links):
-    items = []
-    for l in links:
-        note = f" – {e(l['note'])}" if l["note"] else ""
-        items.append(f'<li><a class="link" href="{e(l["url"])}">{e(l["title"])}</a>{note}</li>')
-    return '<ul class="entry__links">' + "".join(items) + "</ul>"
+    """Ссылки-слова через запятую в одном абзаце."""
+    items = [f'<a class="link" href="{e(l["url"])}">{e(l["text"])}</a>' for l in links]
+    return '<p class="entry__sources">' + ", ".join(items) + "</p>"
 
 
 def render_gallery(images):
@@ -217,17 +215,24 @@ def render_page(rec):
     if c["site_url"] and c["og_image"]:
         head_extra += f'<meta property="og:image" content="{e(c["site_url"] + "/" + c["og_image"].lstrip("/"))}">\n  '
 
-    sections = []
-    if rec["appearing"]:
-        sections.append(section("Происхождение", paragraphs(rec["appearing"])))
+    # Порядок абзацев: Значение → Происхождение (+ дата) → Пример → Ссылки
+    sections = [section("Значение", paragraphs(rec["meaning"]))]
+    if rec["appearing"] or rec["date"]:
+        date_html = f'<span class="entry__date">{e(rec["date"])}</span>' if rec["date"] else ""
+        sections.append(section("Происхождение", paragraphs(rec["appearing"]), date_html))
     if rec["example"]:
         sections.append(section("Пример", f'<p class="example">{e(rec["example"])}</p>'))
-    if rec["body"]:
-        sections.append(section("Подробнее", paragraphs(rec["body"])))
     if rec["links"]:
         sections.append(section("Ссылки", render_links(rec["links"])))
-    if rec["gallery"]:
-        sections.append(section("Галерея", render_gallery(rec["gallery"])))
+
+    aside = ""
+    if rec["images"]:
+        aside = (
+            '<aside class="entry__aside" aria-labelledby="gallery-title">'
+            '<h2 class="entry__h" id="gallery-title">Галерея</h2>'
+            + render_gallery(rec["images"]) + "</aside>"
+        )
+    layout_cls = "entry__layout" + (" entry__layout--gallery" if aside else "")
 
     contact = f'<a data-contact href="{e(c["contact_href"])}">{e(c["contact_label"])}</a>'
 
@@ -268,12 +273,14 @@ def render_page(rec):
       <a class="link" id="back" href="../../#all-title">← Ко всем понятиям</a>
     </nav>
 
-    <article class="card entry__card {CAT_CLASS.get(rec['category'], '')}">
-      <h1 class="entry__title">{e(rec['phrase'])}</h1>
-      <span class="tag">{e(rec['category'])}</span>
-      <p class="entry__meaning">{e(rec['meaning'])}</p>
-      {''.join(sections)}
-    </article>
+    <div class="{layout_cls}">
+      <article class="card entry__card {CAT_CLASS.get(rec['category'], '')}">
+        <h1 class="entry__title">{e(rec['phrase'])}</h1>
+        <span class="tag">{e(rec['category'])}</span>
+        {''.join(sections)}
+      </article>
+      {aside}
+    </div>
   </main>
 
   <footer class="footer">
