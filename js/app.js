@@ -337,7 +337,6 @@
     if (!form) return;
     const statusEl = $('form-status');
     const btn = $('submit-btn');
-    const counter = $('meaning-counter');
     const COOLDOWN_MS = 30000; // пауза после успешной отправки
     let sending = false;
 
@@ -381,7 +380,6 @@
       statusEl.className = 'form-status';
       statusEl.textContent = '';
     }
-    function updateCounter() { counter.textContent = `${fields[2].input.value.length} / 250`; }
 
     // Ошибка пропадает, когда человек начинает исправлять поле
     fields.forEach((f) => {
