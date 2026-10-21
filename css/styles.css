@@ -227,28 +227,41 @@ mark { background: #FFE9A8; color: inherit; border-radius: 3px; padding: 0 .1em;
 .site-head__name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .site-head :focus-visible { outline-color: var(--orange); }
 
-.entry { padding-top: 1rem; padding-bottom: 1rem; }
+.entry { padding-top: 1rem; padding-bottom: 4cm; }   /* отступ до футера около 4 см */
 .crumbs { margin-bottom: .75rem; }
 .crumbs .link { display: inline-flex; align-items: center; min-height: 44px; }
-.entry__card { display: block; max-width: 52rem; margin: 0 auto; padding: 1.25rem; }
+
+/* Карточка слева; галерея справа (десктоп) или под карточкой (телефон, планшет) */
+.entry__layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.entry__card { display: block; width: 100%; max-width: 57.2rem; margin: 0; padding: 1.25rem; }  /* 52rem + 10% */
 .entry__card:hover { border-color: var(--line); border-top-color: var(--accent); }
 .entry__title { font-size: 1.75rem; line-height: 1.15; margin-bottom: .6rem; overflow-wrap: anywhere; }
-.entry__meaning { max-width: 65ch; font-size: 1.0625rem; line-height: 1.6; overflow-wrap: anywhere; }
+
 .entry__section { margin-top: 1.5rem; }
+.entry__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .75rem; margin-bottom: .5rem; }
+.entry__head .entry__h { margin-bottom: 0; }
+.entry__date { font-size: .9375rem; font-weight: 600; color: var(--muted); }
 .entry__h { font-size: 1.1875rem; margin-bottom: .5rem; }
 .entry__section p { max-width: 65ch; overflow-wrap: anywhere; }
 .entry__section p + p { margin-top: .75rem; }
 .entry__section .example { margin-top: 0; font-size: 1rem; }
-.entry__links { margin: 0; padding-left: 1.25rem; }
-.entry__links li { margin-bottom: .35rem; overflow-wrap: anywhere; }
+.entry__section:first-of-type { margin-top: 1rem; }
+.entry__sources { line-height: 1.6; }
+
+.entry__aside { min-width: 0; }
+.entry__aside .entry__h { margin-bottom: .75rem; }
 .gallery { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); }
 .gallery figure { margin: 0; }
-.gallery img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
+.gallery img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
 .gallery figcaption { margin-top: .35rem; font-size: .875rem; color: var(--muted); }
+
 @media (min-width: 768px) {
   .entry__card { padding: 2rem; }
   .entry__title { font-size: 2.5rem; }
-  .entry__meaning { font-size: 1.1875rem; }
+  .entry__section p:not(.example):not(.entry__sources) { font-size: 1.0625rem; }
+}
+@media (min-width: 1024px) {
+  .entry__layout--gallery { grid-template-columns: minmax(0, 57.2rem) minmax(14rem, 1fr); gap: 2rem; }
 }
 
 /* Если словарь не загрузился, фильтры и список скрываются */
