@@ -288,6 +288,7 @@ def render_page(rec):
     <div class="wrap footer__inner">
       <p class="footer__title">Словарь понятий Киберкамбека</p>
       <p class="footer__text">Составлен участниками локальной группы Киберкамбек.</p>
+      <p class="footer__text">Названия игр принадлежат их правообладателям. Сайт неофициальный и не связан с ними.</p>
       <nav aria-label="Разделы сайта">
         <ul class="footer__nav">
           <li><a href="../../#search">Поиск</a></li>
