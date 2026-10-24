@@ -231,7 +231,10 @@
             "date": "март 2022",
             "example": "Ылеся летает.",
             "links": [],
-            "images": []
+            "images": [
+                {"src": "images/memes/ylesya/1.webp", "alt": "1"},
+                {"src": "images/memes/ylesya/2.webp", "alt": "2"}
+            ]
         },
         {
             "id": "ph-018",
@@ -308,7 +311,10 @@
             "date": "Декабрь 2021",
             "example": "«Фильм разработан: Стикмены × Кирамбек TV»\n«Кирамбек снял с пояса телепорт и усилители, и вскоре они телепортировалась.» — Kirambek: Save the World",
             "links": [],
-            "images": []
+            "images": [
+                {"src": "images/memes/kirambek/1.webp", "alt": "1"},
+                {"src": "images/memes/kirambek/2.webp", "alt": "2"}
+            ]
         },
         {
             "id": "ph-024",
@@ -404,11 +410,18 @@
                 {"src": "images/memes/kollekcia-grenki/13.webp", "alt": "1"},
                 {"src": "images/memes/kollekcia-grenki/14.webp", "alt": "1"},
                 {"src": "images/memes/kollekcia-grenki/15.webp", "alt": "1"},
-                {"src": "images/memes/kollekcia-grenki/16.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/16.webp", "alt": "ты как это читаешь"},
                 {"src": "images/memes/kollekcia-grenki/17.webp", "alt": "1"},
                 {"src": "images/memes/kollekcia-grenki/18.webp", "alt": "1"},
-                {"src": "images/memes/kollekcia-grenki/91.webp", "alt": "1"},
-                {"src": "images/memes/kollekcia-grenki/20.webp", "alt": "1"}
+                {"src": "images/memes/kollekcia-grenki/19.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/20.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/21.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/22.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/23.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/24.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/25.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/26.webp", "alt": "1"},
+                {"src": "images/memes/kollekcia-grenki/27.webp", "alt": "1"}
             ]
         },
         {
@@ -459,7 +472,11 @@
             "date": "28 июля 2022",
             "example": "",
             "links": [],
-            "images": []
+            "images": [
+                {"src": "images/memes/yulant/1.webp", "alt": "1"},
+                {"src": "images/memes/yulant/2.webp", "alt": "2"},
+                {"src": "images/memes/yulant/3.webp", "alt": "3"}
+            ]
         },
         {
             "id": "ph-034",
@@ -484,7 +501,7 @@
             "example": "В ситуации, когда случайно рассыпал гренки из пачки.",
             "links": [],
             "images": [
-                {"src": ""}
+                {"src": "images/memes/grenki-upali/1.webp", "alt": "1"}
             ]
         },
         {
