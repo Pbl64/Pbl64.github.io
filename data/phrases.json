@@ -233,7 +233,7 @@
             "links": [],
             "images": [
                 {"src": "images/memes/ylesya/1.webp", "alt": "1", "caption": "Автор: Паблё"},
-                {"src": "images/memes/ylesya/2.webp", "alt": "2", "caption": "Автор: Паблё"}
+                {"src": "images/memes/ylesya/2.webp", "alt": "2"}
             ]
         },
         {
@@ -313,7 +313,7 @@
             "links": [],
             "images": [
                 {"src": "images/memes/kirambek/1.webp", "alt": "1", "caption": "Автор: Паблё"},
-                {"src": "images/memes/kirambek/2.webp", "alt": "2", "caption": "Автор: Паблё"}
+                {"src": "images/memes/kirambek/2.webp", "alt": "2"}
             ]
         },
         {
@@ -474,8 +474,8 @@
             "links": [],
             "images": [
                 {"src": "images/memes/yulant/1.webp", "alt": "1", "caption": "Автор: Чекушка (ChekushkaZ)"},
-                {"src": "images/memes/yulant/2.webp", "alt": "2", "caption": "Автор: Чекушка (ChekushkaZ)"},
-                {"src": "images/memes/yulant/3.webp", "alt": "3", "caption": "Автор: Чекушка (ChekushkaZ)"}
+                {"src": "images/memes/yulant/2.webp", "alt": "2"},
+                {"src": "images/memes/yulant/3.webp", "alt": "3"}
             ]
         },
         {
