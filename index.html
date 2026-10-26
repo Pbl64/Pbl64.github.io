@@ -48,12 +48,19 @@
       </div>
 
       <div class="filters">
-        <div>
+        <div class="filters__views" id="view-wrap" hidden>
+          <span class="field-label" id="view-label">Показывать</span>
+          <div class="segmented segmented--2" id="views" role="group" aria-labelledby="view-label">
+            <button type="button" class="seg" data-view="all" aria-pressed="true">Все понятия</button>
+            <button type="button" class="seg" data-view="groups" aria-pressed="false">По группам</button>
+          </div>
+        </div>
+        <div class="filters__cats">
           <span class="field-label" id="cat-label">Категория</span>
           <div class="segmented" id="categories" role="group" aria-labelledby="cat-label"></div>
         </div>
         <div class="filters__row">
-          <div>
+          <div class="filters__sort">
             <label for="sort" class="field-label">Сортировка</label>
             <select id="sort">
               <option value="alpha">По алфавиту (А–Я)</option>
@@ -63,6 +70,7 @@
           <button type="button" class="btn btn--ghost" id="reset" disabled>Сбросить</button>
         </div>
         <p id="cat-hint" class="hint"></p>
+        <button type="button" class="chip" id="group-chip" hidden></button>
       </div>
 
       <!-- 2.3 Список записей -->
