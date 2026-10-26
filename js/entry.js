@@ -8,7 +8,7 @@
     try {
       if (!document.referrer || history.length < 2) return; // откроется обычная ссылка
       const ref = new URL(document.referrer);
-      if (ref.origin === location.origin && !ref.pathname.includes('/entry/')) {
+      if (ref.origin === location.origin && !ref.pathname.includes('/entry/') && !ref.pathname.includes('/group/')) {
         e.preventDefault();
         history.back();
       }
