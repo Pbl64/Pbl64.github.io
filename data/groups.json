@@ -1,0 +1,34 @@
+{
+  "groups": [
+    {
+      "slug": "stikmeny",
+      "name": "Стикмены",
+      "description": "Стикмены – участники Киберкамбека, а также связанные с ними персонажи и никнеймы.",
+      "members": ["zelenyy-stikmen", "babayuzer", "dzh", "gren", "grenki", "kalendula", "chas-nags", "right-choice", "chekushka", "putin", "pablyo", "yhanbek", "kiberkambek"]
+    },
+    {
+      "slug": "ylesya-i-matvey",
+      "name": "Ылеся & Матвей",
+      "description": "Парные персонажи Ылеся и Матвей, которые часто встречаются вместе.",
+      "members": ["ylesya", "matvey"]
+    },
+    {
+      "slug": "kazbeki",
+      "name": "Казбеки",
+      "description": "Группа понятий вокруг имён Кузбек, Казбек и Узбек и их вариаций.",
+      "members": ["kuzbek", "kazbek", "uzbek", "direktor-kazbek", "babulya-ty-kuzbek", "kiberkuzbek"]
+    },
+    {
+      "slug": "skalasotki",
+      "name": "Скаласотки",
+      "description": "Три персонажа-Скаласотки: Киберкамбекская, Киви и Безымянная.",
+      "members": ["skalasotka-kiberkambekskaya", "skalasotka-kiwi", "skalasotka-bezymyannaya"]
+    },
+    {
+      "slug": "privetstviya",
+      "name": "Приветствия",
+      "description": "Слова и мемы, которыми здороваются.",
+      "members": ["zdravstvuyte", "zdarova", "parkur"]
+    }
+  ]
+}
