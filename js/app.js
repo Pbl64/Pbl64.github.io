@@ -5,6 +5,7 @@
   // ===== Настройки: меняются один раз при запуске сайта =====
   const CONFIG = {
     dataUrl: 'data/phrases.json',            // путь без начального слеша (важно для GitHub Pages)
+    groupsUrl: 'data/groups.json',
     debounceMs: 180,                         // задержка поиска при вводе
     formEndpoint: 'https://api.web3forms.com/submit', // сервис приёма форм Web3Forms
     formKey: 'bc55497d-6004-4245-83db-1caeb8e25ed8',   // публичный ключ Web3Forms (его можно хранить в коде)
@@ -15,7 +16,7 @@
 
   // Класс карточки по названию категории
   const CAT_CLASS = { 'Мем': 'card--meme', 'Предложение': 'card--sentence', 'Персонаж': 'card--character' };
-  const DEFAULTS = { q: '', category: '', sort: 'alpha' }; // category '' = «Все»
+  const DEFAULTS = { q: '', category: '', sort: 'alpha', view: 'all', group: '' }; // category '' = «Все»
 
   const $ = (id) => document.getElementById(id);
   const el = {
@@ -23,11 +24,13 @@
     search: $('search'), clear: $('clear'), count: $('count'),
     categories: $('categories'), sort: $('sort'), reset: $('reset'), hint: $('cat-hint'),
     list: $('list'), empty: $('empty'), emptyTitle: $('empty-title'),
-    emptyReset: $('empty-reset'), suggest: $('suggest'), start: $('start')
+    emptyReset: $('empty-reset'), suggest: $('suggest'), start: $('start'),
+    allTitle: $('all-title'), views: $('views'), viewWrap: $('view-wrap'), groupChip: $('group-chip')
   };
 
   let categories = [];   // [{name, plural, description}]
   let items = [];        // проверенные записи
+  let groups = [];
   const state = { ...DEFAULTS };
   const collator = new Intl.Collator('ru');
 
@@ -41,11 +44,12 @@
     if (d >= 2 && d <= 4) return few;
     return many;
   };
-  const isDefault = () => state.q === DEFAULTS.q && state.category === DEFAULTS.category && state.sort === DEFAULTS.sort;
+  const isDefault = () => state.q === DEFAULTS.q && state.category === DEFAULTS.category
+    && state.sort === DEFAULTS.sort && state.group === DEFAULTS.group;
 
   // ===== Загрузка и проверка данных (сообщения только в консоль) =====
-  async function loadData() {
-    const res = await fetch(CONFIG.dataUrl, { cache: 'no-cache' });
+  async function loadData(url = CONFIG.dataUrl) {
+    const res = await fetch(url, { cache: 'no-cache' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
   }
@@ -107,11 +111,42 @@
     return { categories: cats, items: result };
   }
 
+  function validateGroups(data, all) {
+    if (!data || !Array.isArray(data.groups)) return [];
+    const bySlug = new Map(all.map((it) => [it.slug, it]));
+    const seen = new Set();
+    const out = [];
+    data.groups.forEach((g, i) => {
+      const where = `Группа №${i + 1}`;
+      if (!g || typeof g.name !== 'string' || !g.name.trim() || typeof g.slug !== 'string'
+          || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(g.slug)) {
+        console.error(`${where}: нужны name и slug (a–z, 0–9, дефисы). Пропущена.`); return;
+      }
+      if (seen.has(g.slug)) { console.error(`${where}: slug «${g.slug}» повторяется. Пропущена.`); return; }
+      seen.add(g.slug);
+      const members = [];
+      (Array.isArray(g.members) ? g.members : []).forEach((s) => {
+        const it = bySlug.get(s);
+        if (!it) console.warn(`${where} (${g.name}): понятие «${s}» не найдено.`);
+        else if (!members.includes(it)) members.push(it);
+      });
+      const description = typeof g.description === 'string' ? g.description.trim() : '';
+      out.push({
+        slug: g.slug, name: g.name.trim(), description, items: members,
+        hay: fold([g.name, description, ...members.map((m) => m.phrase)].join('\n'))
+      });
+    });
+    return out;
+  }
+
   // ===== Фильтрация и сортировка: категория → поиск → сортировка =====
   function getResults() {
     const tokens = fold(state.q).trim().split(/\s+/).filter(Boolean);
+    const grp = state.group ? groups.find((g) => g.slug === state.group) : null;
+    const ids = grp ? new Set(grp.items.map((it) => it.id)) : null;
     const list = items.filter((it) =>
-      (!state.category || it.category === state.category) && tokens.every((t) => it.hay.includes(t)));
+      (!ids || ids.has(it.id)) && (!state.category || it.category === state.category)
+      && tokens.every((t) => it.hay.includes(t)));
 
     const order = new Map(categories.map((c, i) => [c.name, i]));
     list.sort((a, b) => {
@@ -193,13 +228,52 @@
     return ul;
   }
 
+  function getGroupResults() {
+    const tokens = fold(state.q).trim().split(/\s+/).filter(Boolean);
+    return { list: groups.filter((g) => tokens.every((t) => g.hay.includes(t))), tokens };
+  }
+
+  const groupUrl = (g) => 'group/' + encodeURIComponent(g.slug) + '/';
+
+  function makeGroupRow(g, tokens) {
+    const li = make('li', 'group-row');
+    const main = make('div', 'group-row__main');
+    const head = make('div', 'group-row__head');
+    const h = make('h3', 'group-row__title');
+    appendHighlighted(h, g.name, tokens);
+    const n = g.items.length;
+    head.append(h, make('p', 'group-row__count', `${n} ${plural(n, 'понятие', 'понятия', 'понятий')}`));
+    main.append(head);
+    if (g.description) {
+      const desc = make('p', 'group-row__desc');
+      appendHighlighted(desc, g.description, tokens);
+      main.append(desc);
+    }
+    const actions = make('div', 'group-row__actions');
+    const show = make('button', 'btn btn--primary', 'Показать понятия');
+    show.type = 'button';
+    show.dataset.showGroup = g.slug;
+    show.setAttribute('aria-label', 'Показать понятия группы ' + g.name);
+    const about = make('a', 'btn btn--ghost', 'О группе');
+    about.href = groupUrl(g);
+    about.setAttribute('aria-label', 'О группе ' + g.name);
+    actions.append(show, about);
+    li.append(main, actions);
+    return li;
+  }
+
   function render() {
-    const { list, tokens } = getResults();
+    const inGroups = state.view === 'groups';
+    const { list, tokens } = inGroups ? getGroupResults() : getResults();
     el.list.replaceChildren();
+    el.allTitle.textContent = inGroups ? 'Группы понятий' : 'Все понятия';
 
     if (list.length) {
-      if (state.sort === 'category') {
-        // Группы с заголовками; записи внутри получают h4
+      if (inGroups) {
+        const ul = make('ul', 'groups');
+        list.forEach((g) => ul.append(makeGroupRow(g, tokens)));
+        el.list.append(ul);
+      } else if (state.sort === 'category') {
         categories.forEach((c) => {
           const group = list.filter((it) => it.category === c.name);
           if (!group.length) return;
@@ -212,21 +286,22 @@
       }
     }
 
-    // Пустой результат: фильтры остаются на месте
     el.empty.hidden = list.length > 0;
     if (!list.length) {
       const cat = categories.find((c) => c.name === state.category);
+      const grp = groups.find((g) => g.slug === state.group);
       el.emptyTitle.textContent = state.q.trim()
         ? `Ничего не нашлось по запросу «${state.q.trim()}»`
+        : grp ? `В группе «${grp.name}» нет записей в выбранной категории`
         : `В категории «${cat ? cat.plural : ''}» пока нет записей`;
     }
 
-    // Счётчик
-    const total = items.length;
-    const filtered = state.q.trim() || state.category;
+    const total = inGroups ? groups.length : items.length;
+    const filtered = state.q.trim() || (!inGroups && (state.category || state.group));
+    const noun = inGroups ? ['группа', 'группы', 'групп'] : ['запись', 'записи', 'записей'];
     el.count.textContent = filtered
       ? `Найдено: ${list.length} из ${total}`
-      : `Показаны все ${total} ${plural(total, 'запись', 'записи', 'записей')}`;
+      : `Показаны все ${total} ${plural(total, ...noun)}`;
 
     updateControls();
     syncUrl();
@@ -240,6 +315,16 @@
     el.clear.hidden = !el.search.value;
     const cat = categories.find((c) => c.name === state.category);
     el.hint.textContent = cat ? cat.description : '';
+
+    el.views.querySelectorAll('.seg').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
+    el.dictionary.classList.toggle('is-groups', state.view === 'groups');
+    const g = groups.find((x) => x.slug === state.group);
+    el.groupChip.hidden = !g || state.view === 'groups';
+    if (g) {
+      el.groupChip.textContent = `Группа: ${g.name} ×`;
+      el.groupChip.setAttribute('aria-label', `Группа: ${g.name}. Нажмите, чтобы убрать фильтр`);
+    }
   }
 
   function buildCategoryButtons() {
@@ -262,6 +347,9 @@
     const cat = p.get('category') || '';
     state.category = categories.some((c) => c.name === cat) ? cat : '';
     state.sort = p.get('sort') === 'category' ? 'category' : 'alpha';
+    state.view = p.get('view') === 'groups' && groups.length ? 'groups' : 'all';
+    const g = p.get('group') || '';
+    state.group = state.view === 'all' && groups.some((x) => x.slug === g) ? g : '';
     el.search.value = state.q;
   }
   function syncUrl() {
@@ -269,6 +357,8 @@
     if (state.q) p.set('q', state.q);
     if (state.category) p.set('category', state.category);
     if (state.sort !== DEFAULTS.sort) p.set('sort', state.sort);
+    if (state.view !== DEFAULTS.view) p.set('view', state.view);
+    if (state.group) p.set('group', state.group);
     const s = p.toString();
     try { history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) { /* file:// и т. п. */ }
   }
@@ -289,7 +379,8 @@
 
   // ===== События =====
   function resetAll() {
-    Object.assign(state, DEFAULTS);
+    const view = state.view;
+    Object.assign(state, DEFAULTS, { view });
     el.search.value = '';
     render();
   }
@@ -319,7 +410,29 @@
       state.category = b.dataset.cat;
       render();
     });
-    el.list.addEventListener('click', (e) => { if (e.target.closest('.card__link')) saveScroll(); });
+    el.list.addEventListener('click', (e) => {
+      if (e.target.closest('.card__link, .group-row a')) { saveScroll(); return; }
+      const b = e.target.closest('[data-show-group]');
+      if (!b) return;
+      clearTimeout(timer);
+      Object.assign(state, DEFAULTS, { view: 'all', group: b.dataset.showGroup });
+      el.search.value = '';
+      render();
+      el.allTitle.scrollIntoView();
+      el.groupChip.focus({ preventScroll: true });
+    });
+    el.views.addEventListener('click', (e) => {
+      const b = e.target.closest('.seg');
+      if (!b) return;
+      state.view = b.dataset.view;
+      if (state.view === 'groups') state.group = '';
+      render();
+    });
+    el.groupChip.addEventListener('click', () => {
+      state.group = '';
+      render();
+      el.categories.querySelector('.seg').focus();
+    });
     el.sort.addEventListener('change', () => { state.sort = el.sort.value; render(); });
     el.reset.addEventListener('click', resetAll);
     el.emptyReset.addEventListener('click', resetAll);
@@ -488,6 +601,12 @@
       showError();
       return;
     }
+
+    let rawGroups = null;
+    try { rawGroups = await loadData(CONFIG.groupsUrl); }
+    catch (err) { console.warn('Группы не загружены:', err); }
+    groups = validateGroups(rawGroups, items);
+    el.viewWrap.hidden = !groups.length;
 
     // Старые ссылки вида #ph-001 ведут на страницу записи
     const old = location.hash.length > 1 && items.find((it) => '#' + it.id === location.hash);
