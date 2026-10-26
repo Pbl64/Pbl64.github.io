@@ -267,6 +267,35 @@ mark { background: #FFE9A8; color: inherit; border-radius: 3px; padding: 0 .1em;
 /* Если словарь не загрузился, фильтры и список скрываются */
 .is-failed .search-bar, .is-failed .filters, .is-failed .list-section { display: none; }
 
+/* ===== Группы ===== */
+a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.filters__views { grid-column: 1 / -1; }
+.segmented.segmented--2 { grid-template-columns: repeat(2, 1fr); }
+.is-groups .filters__cats, .is-groups .filters__sort { display: none; }
+.is-groups .filters__row { grid-template-columns: auto; justify-content: start; }
+.filters .chip { grid-column: 1 / -1; justify-self: start; }
+.chip { display: inline-flex; align-items: center; min-height: 44px; padding: .4rem .9rem; border: 2px solid var(--control-line); border-radius: 999px; background: #fff; color: var(--text); font: 600 .9375rem var(--font-ui); cursor: pointer; }
+.chip:hover { background: #F1EFE8; }
+.list-section h2 { scroll-margin-top: 6rem; }
+
+.groups { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+.group-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem 1.5rem; background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--green); border-radius: 12px; padding: 1rem; }
+.group-row__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; margin-bottom: .4rem; }
+.group-row__title { font-size: 1.3125rem; line-height: 1.25; overflow-wrap: anywhere; }
+.group-row__count { font-size: .9375rem; font-weight: 600; color: var(--muted); }
+.group-row__desc { max-width: 65ch; overflow-wrap: anywhere; }
+.group-row__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.group-row__actions .btn { flex: 1 1 12rem; }
+@media (min-width: 768px) {
+  .group-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 1.25rem 1.5rem; }
+  .group-row__actions { flex-direction: column; }
+  .group-row__actions .btn { flex: none; min-width: 12rem; }
+}
+
+.entry__groups { margin-top: .25rem; font-size: .9375rem; }
+.group-members { margin-top: 2rem; }
+.group-members h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
