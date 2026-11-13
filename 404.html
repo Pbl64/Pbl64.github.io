@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Страница не найдена – Киберкамбек</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script>
+    // Старые адреса /entry/<slug>/ переехали в /slovar/entry/<slug>/
+    (function () {
+      var p = location.pathname;
+      if (p.indexOf('/entry/') === 0) {
+        location.replace('/slovar' + p + location.search + location.hash);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <main class="wrap" style="padding-top:3rem;padding-bottom:3rem">
+    <h1 style="font-size:1.75rem;margin-bottom:1rem">Страница не найдена</h1>
+    <p style="margin-bottom:1rem">Возможно, адрес изменился или в нём опечатка.</p>
+    <p><a class="link" href="/">На главную</a> · <a class="link" href="/slovar/">В словарь</a></p>
+  </main>
+</body>
+</html>

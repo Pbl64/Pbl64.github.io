@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 """Генератор страниц записей для «Словаря мемов Киберкамбека».
 
+Структура сайта:
+  /                      главная Киберкамбека (index.html, пишется вручную)
+  /slovar/               словарь (slovar/index.html, slovar/js, slovar/data, slovar/images)
+  /slovar/entry/<slug>/  страницы записей (создаёт этот скрипт)
+  /css, /images          общие стили и иконка для всех разделов
+
 Что делает:
-  data/phrases.json  →  entry/<slug>/index.html  для каждой записи
-                     →  sitemap.xml              (только если указан site_url)
+  slovar/data/phrases.json  →  slovar/entry/<slug>/index.html  для каждой записи
+                            →  sitemap.xml (в корне; только если указан site_url)
 
 Запуск:  python build.py
 Нужен только Python 3.8+, сторонние библиотеки не нужны.
 
-Все данные записи лежат в одном файле data/phrases.json. Кроме основных полей
+Все данные записи лежат в одном файле slovar/data/phrases.json. Кроме основных полей
 (id, slug, phrase, meaning, category, appearing, example) у записи есть:
 
   "date":   "декабрь 2024"          – дата появления, выводится рядом с «Происхождением»
   "links":  [{"text": "Название источника", "url": "https://..."}]
                                       – выводятся в тексте через запятую
   "images": [{"src": "images/memes/slug/1.jpg", "alt": "Описание", "caption": "Подпись"}]
-                                      – локальные файлы (путь от корня сайта) или https-ссылки;
+                                      – локальные файлы (путь от папки slovar/) или https-ссылки;
                                         width и height необязательны
 
 Пустые поля ("", []) на странице не выводятся.
@@ -36,20 +42,24 @@ CONFIG = {
     "site_name": "Словарь мемов Киберкамбека",
     # Картинка для превью ссылок (лучше 1200×630), путь от корня сайта, например "images/og.png".
     "og_image": "",
-    # Те же значения, что в CONFIG в js/app.js
+    # Те же значения, что в CONFIG в slovar/js/app.js
     "contact_label": "kiberkambek@gmail.com",
     "contact_href": "mailto:kiberkambek@gmail.com",
     "updated": "октябрь 2026",
 }
 
+# Подсайты, которые попадают в sitemap (кроме словаря, он добавляется отдельно)
+EXTRA_SECTIONS = []  # например: ["proekty"]
+
 ROOT = Path(__file__).resolve().parent
-DATA_FILE = ROOT / "data" / "phrases.json"
-OUT_DIR = ROOT / "entry"
-GROUP_DIR = ROOT / "group"
+SECTION = "slovar"                       # папка словаря
+SLOVAR = ROOT / SECTION
+DATA_FILE = SLOVAR / "data" / "phrases.json"
+OUT_DIR = SLOVAR / "entry"
 SITEMAP = ROOT / "sitemap.xml"
 
 CAT_CLASS = {"Мем": "card--meme", "Предложение": "card--sentence", "Персонаж": "card--character"}
-SLUG_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")  # то же правило, что в js/app.js
+SLUG_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")  # то же правило, что в slovar/js/app.js
 
 warnings = []
 errors = []
@@ -89,7 +99,7 @@ def paragraphs(value):
 
 
 def asset_url(src):
-    """Путь из JSON (от корня сайта) → путь со страницы entry/<slug>/."""
+    """Путь из JSON (от папки slovar/) → путь со страницы slovar/entry/<slug>/."""
     src = clean_str(src)
     if re.match(r"^https?://", src):
         return src
@@ -129,8 +139,8 @@ def clean_images(items, where):
         alt = clean_str(it.get("alt"))
         if not alt:
             warn(f"{where}: у картинки {src} нет alt (описания для скринридеров).")
-        if not re.match(r"^https?://", src) and not (ROOT / src.lstrip("/")).is_file():
-            warn(f"{where}: файл {src} не найден.")
+        if not re.match(r"^https?://", src) and not (SLOVAR / src.lstrip("/")).is_file():
+            warn(f"{where}: файл {src} не найден (ищется в папке {SECTION}/).")
         out.append({"src": src, "alt": alt, "caption": clean_str(it.get("caption")),
                     "width": it.get("width"), "height": it.get("height")})
     return out
@@ -158,7 +168,7 @@ def load_records():
             continue
         ids.add(r["id"])
 
-        # slug: поле slug, а если его нет или он неверный — id (так же делает js/app.js)
+        # slug: поле slug, а если его нет или он неверный — id (так же делает slovar/js/app.js)
         slug = clean_str(r.get("slug"))
         if not slug:
             slug = r["id"]
@@ -176,39 +186,6 @@ def load_records():
         rec["images"] = clean_images(r.get("images"), where)
         records.append(rec)
     return records
-
-
-def load_groups(records):
-    path = ROOT / "data" / "groups.json"
-    if not path.is_file():
-        return []
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    by_slug = {r["slug"]: r for r in records}
-    groups, seen = [], set()
-    for i, g in enumerate(raw.get("groups", []), 1):
-        where = f"Группа №{i}"
-        slug = clean_str(g.get("slug")) if isinstance(g, dict) else ""
-        name = clean_str(g.get("name")) if isinstance(g, dict) else ""
-        if not name or not SLUG_RE.match(slug):
-            warn(f"{where}: нужны name и slug (a–z, 0–9, дефисы). Пропущена.")
-            continue
-        if slug in seen:
-            fail(f"{where}: slug «{slug}» повторяется.")
-            continue
-        seen.add(slug)
-        members = []
-        for s in g.get("members", []):
-            r = by_slug.get(s)
-            if r is None:
-                warn(f"{where} ({name}): понятие «{s}» не найдено. Пропущено.")
-            elif r not in members:
-                members.append(r)
-        group = {"slug": slug, "name": name, "description": clean_str(g.get("description")),
-                 "body": clean_str(g.get("body")), "members": members}
-        for r in members:
-            r.setdefault("groups", []).append({"slug": slug, "name": name})
-        groups.append(group)
-    return groups
 
 
 # ===== Шаблон страницы =====
@@ -236,16 +213,43 @@ def render_gallery(images):
     return '<ul class="gallery">' + "".join(figs) + "</ul>"
 
 
-def shell(title, desc, path, main_html, og_type="article"):
+def render_page(rec):
     c = CONFIG
     site = c["site_name"]
-    url = f"{c['site_url']}/{path}" if c["site_url"] else ""
+    title = f"{rec['phrase']} – {site}"
+    desc = short_text(rec["meaning"])
+    url = f"{c['site_url']}/{SECTION}/entry/{rec['slug']}/" if c["site_url"] else ""
+
     head_extra = ""
     if url:
         head_extra += f'<link rel="canonical" href="{e(url)}">\n  <meta property="og:url" content="{e(url)}">\n  '
     if c["site_url"] and c["og_image"]:
         head_extra += f'<meta property="og:image" content="{e(c["site_url"] + "/" + c["og_image"].lstrip("/"))}">\n  '
+
+    # Порядок абзацев: Значение → Происхождение (+ дата) → Пример → Ссылки
+    sections = [section("Значение", paragraphs(rec["meaning"]))]
+    if rec["appearing"] or rec["date"]:
+        date_html = f'<span class="entry__date">{e(rec["date"])}</span>' if rec["date"] else ""
+        sections.append(section("Происхождение", paragraphs(rec["appearing"]), date_html))
+    if rec["example"]:
+        sections.append(section("Пример", f'<p class="example">{e(rec["example"])}</p>'))
+    if rec["links"]:
+        sections.append(section("Ссылки", render_links(rec["links"])))
+
+    aside = ""
+    if rec["images"]:
+        aside = (
+            '<aside class="entry__aside" aria-labelledby="gallery-title">'
+            '<h2 class="entry__h" id="gallery-title">Галерея</h2>'
+            + render_gallery(rec["images"]) + "</aside>"
+        )
+    layout_cls = "entry__layout" + (" entry__layout--gallery" if aside else "")
+
     contact = f'<a data-contact href="{e(c["contact_href"])}">{e(c["contact_label"])}</a>'
+
+    # Пути: страница лежит в slovar/entry/<slug>/
+    #   ../../      = slovar/   (главная словаря, js)
+    #   ../../../   = корень сайта (общие css и images, главная Киберкамбека)
     return f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -254,28 +258,45 @@ def shell(title, desc, path, main_html, og_type="article"):
   <title>{e(title)}</title>
   <meta name="description" content="{e(desc)}">
   <meta name="theme-color" content="#111111">
-  {head_extra}<meta property="og:type" content="{og_type}">
+  {head_extra}<meta property="og:type" content="article">
   <meta property="og:site_name" content="{e(site)}">
   <meta property="og:title" content="{e(title)}">
   <meta property="og:description" content="{e(desc)}">
   <meta property="og:locale" content="ru_RU">
   <meta name="twitter:card" content="summary">
-  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="../../../images/favicon.svg" type="image/svg+xml">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:wght@500;700&display=swap">
-  <link rel="stylesheet" href="../../css/styles.css">
+  <link rel="stylesheet" href="../../../css/styles.css">
   <script src="../../js/entry.js" defer></script>
 </head>
 <body id="top">
   <a class="skip" href="#content">Перейти к содержимому</a>
+
   <header class="site-head">
     <div class="stripe" aria-hidden="true"></div>
     <div class="wrap site-head__inner">
       <a class="site-head__name" href="../../">{e(site)}</a>
     </div>
   </header>
-  {main_html}
+
+  <main class="wrap entry" id="content">
+    <nav class="crumbs" aria-label="Навигация">
+      <a class="link" id="back" href="../../#all-title">← Ко всем понятиям</a>
+    </nav>
+
+    <div class="{layout_cls}">
+      <article class="card entry__card {CAT_CLASS.get(rec['category'], '')}">
+        <h1 class="entry__title">{e(rec['phrase'])}</h1>
+        <span class="tag">{e(rec['category'])}</span>
+        {''.join(sections)}
+      </article>
+      {aside}
+    </div>
+  </main>
+
   <footer class="footer">
     <div class="stripe" aria-hidden="true"></div>
     <div class="wrap footer__inner">
@@ -284,6 +305,7 @@ def shell(title, desc, path, main_html, og_type="article"):
       <p class="footer__text">Названия игр принадлежат их правообладателям. Сайт неофициальный и не связан с ними.</p>
       <nav aria-label="Разделы сайта">
         <ul class="footer__nav">
+          <li><a href="../../../">Главная</a></li>
           <li><a href="../../#search">Поиск</a></li>
           <li><a href="../../#all-title">Все записи</a></li>
           <li><a href="../../#suggest-form">Предложить запись</a></li>
@@ -300,88 +322,16 @@ def shell(title, desc, path, main_html, og_type="article"):
 """
 
 
-def render_page(rec):
-    title = f"{rec['phrase']} – {CONFIG['site_name']}"
-    desc = short_text(rec["meaning"])
-    sections = [section("Значение", paragraphs(rec["meaning"]))]
-    if rec["appearing"] or rec["date"]:
-        date_html = f'<span class="entry__date">{e(rec["date"])}</span>' if rec["date"] else ""
-        sections.append(section("Происхождение", paragraphs(rec["appearing"]), date_html))
-    if rec["example"]:
-        sections.append(section("Пример", f'<p class="example">{e(rec["example"])}</p>'))
-    if rec["links"]:
-        sections.append(section("Ссылки", render_links(rec["links"])))
-    groups_html = ""
-    if rec.get("groups"):
-        links = ", ".join(f'<a class="link" href="../../group/{e(g["slug"])}/">{e(g["name"])}</a>' for g in rec["groups"])
-        label = "Группа" if len(rec["groups"]) == 1 else "Группы"
-        groups_html = f'<p class="entry__groups">{label}: {links}</p>'
-    aside = ""
-    if rec["images"]:
-        aside = ('<aside class="entry__aside" aria-labelledby="gallery-title">'
-                 '<h2 class="entry__h" id="gallery-title">Галерея</h2>'
-                 + render_gallery(rec["images"]) + "</aside>")
-    layout_cls = "entry__layout" + (" entry__layout--gallery" if aside else "")
-    main = f"""<main class="wrap entry" id="content">
-    <nav class="crumbs" aria-label="Навигация">
-      <a class="link" id="back" href="../../#all-title">← Ко всем понятиям</a>
-    </nav>
-    <div class="{layout_cls}">
-      <article class="card entry__card {CAT_CLASS.get(rec['category'], '')}">
-        <h1 class="entry__title">{e(rec['phrase'])}</h1>
-        <span class="tag">{e(rec['category'])}</span>
-        {groups_html}
-        {''.join(sections)}
-      </article>
-      {aside}
-    </div>
-  </main>"""
-    return shell(title, desc, f"entry/{rec['slug']}/", main)
-
-
-def render_group_page(g):
-    title = f"{g['name']} – {CONFIG['site_name']}"
-    desc = short_text(g["description"]) or f"Группа понятий «{g['name']}»."
-    sections = []
-    if g["description"]:
-        sections.append(section("Описание", paragraphs(g["description"])))
-    if g["body"]:
-        sections.append(section("Подробнее", paragraphs(g["body"])))
-    cards = "".join(
-        f'<li class="card {CAT_CLASS.get(r["category"], "")}">'
-        f'<h3 class="card__title"><a class="card__link" href="../../entry/{e(r["slug"])}/">{e(r["phrase"])}</a></h3>'
-        f'<span class="tag">{e(r["category"])}</span>'
-        f'<p class="meaning meaning--clamp">{e(r["meaning"])}</p>'
-        f'<p class="more" aria-hidden="true">Подробнее →</p></li>'
-        for r in g["members"])
-    members = (f'<section class="group-members" aria-labelledby="members-title">'
-               f'<h2 id="members-title">Понятия группы ({len(g["members"])})</h2>'
-               + (f'<ul class="cards">{cards}</ul>' if cards else "<p>В группе пока нет понятий.</p>")
-               + "</section>")
-    main = f"""<main class="wrap entry" id="content">
-    <nav class="crumbs" aria-label="Навигация">
-      <a class="link" id="back" href="../../?view=groups#all-title">← Ко всем группам</a>
-    </nav>
-    <div class="entry__layout">
-      <article class="card entry__card">
-        <h1 class="entry__title">{e(g['name'])}</h1>
-        <span class="tag">Группа</span>
-        {''.join(sections)}
-      </article>
-    </div>
-    {members}
-  </main>"""
-    return shell(title, desc, f"group/{g['slug']}/", main, "website")
-
-
-def write_sitemap(records, groups):
+def write_sitemap(records):
     site = CONFIG["site_url"]
     if not site:
         if SITEMAP.exists():
             SITEMAP.unlink()
         return
     today = date.today().isoformat()
-    urls = [site + "/"] + [f"{site}/entry/{r['slug']}/" for r in records] + [f"{site}/group/{g['slug']}/" for g in groups]
+    urls = [site + "/", f"{site}/{SECTION}/"]
+    urls += [f"{site}/{s}/" for s in EXTRA_SECTIONS]
+    urls += [f"{site}/{SECTION}/entry/{r['slug']}/" for r in records]
     body = "".join(f"  <url><loc>{e(u)}</loc><lastmod>{today}</lastmod></url>\n" for u in urls)
     SITEMAP.write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -391,28 +341,25 @@ def write_sitemap(records, groups):
 
 def main():
     print("Сборка страниц записей…")
+    if not DATA_FILE.is_file():
+        print(f"\n✗ Не найден {DATA_FILE.relative_to(ROOT)}. Словарь должен лежать в папке {SECTION}/.")
+        return 1
     records = load_records()
-    groups = load_groups(records)
     if errors:
-        print(f"\\nСборка остановлена: ошибок {len(errors)}.")
+        print(f"\nСборка остановлена: ошибок {len(errors)}.")
         return 1
 
-    for d in (OUT_DIR, GROUP_DIR):
-        if d.exists():
-            shutil.rmtree(d)
+    if OUT_DIR.exists():
+        shutil.rmtree(OUT_DIR)  # убираем страницы удалённых записей
     for rec in records:
         folder = OUT_DIR / rec["slug"]
         folder.mkdir(parents=True)
         (folder / "index.html").write_text(render_page(rec), encoding="utf-8")
-    for g in groups:
-        folder = GROUP_DIR / g["slug"]
-        folder.mkdir(parents=True)
-        (folder / "index.html").write_text(render_group_page(g), encoding="utf-8")
-    write_sitemap(records, groups)
+    write_sitemap(records)
 
     if not CONFIG["site_url"]:
         warn("site_url не задан: у страниц не будет canonical и og:url, sitemap.xml не создан.")
-    print(f"\\nГотово: страниц {len(records)}, групп {len(groups)}, предупреждений {len(warnings)}.")
+    print(f"\nГотово: страниц {len(records)}, предупреждений {len(warnings)}.")
     return 0
 
 
