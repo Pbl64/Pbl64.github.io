@@ -6,13 +6,13 @@
   <title>Словарь мемов Киберкамбека</title>
   <meta name="description" content="Мемы, персонажи и предложения Киберкамбека: значения, история появления и примеры.">
   <meta name="theme-color" content="#111111">
-  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
 
   <!-- Шрифты: Literata для заголовков, Inter для текста -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:wght@500;700&display=swap">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="../css/styles.css">
   <script src="js/app.js" defer></script>
 </head>
 <body id="top">
@@ -48,19 +48,12 @@
       </div>
 
       <div class="filters">
-        <div class="filters__views" id="view-wrap" hidden>
-          <span class="field-label" id="view-label">Показывать</span>
-          <div class="segmented segmented--2" id="views" role="group" aria-labelledby="view-label">
-            <button type="button" class="seg" data-view="all" aria-pressed="true">Все понятия</button>
-            <button type="button" class="seg" data-view="groups" aria-pressed="false">По группам</button>
-          </div>
-        </div>
-        <div class="filters__cats">
+        <div>
           <span class="field-label" id="cat-label">Категория</span>
           <div class="segmented" id="categories" role="group" aria-labelledby="cat-label"></div>
         </div>
         <div class="filters__row">
-          <div class="filters__sort">
+          <div>
             <label for="sort" class="field-label">Сортировка</label>
             <select id="sort">
               <option value="alpha">По алфавиту (А–Я)</option>
@@ -70,7 +63,6 @@
           <button type="button" class="btn btn--ghost" id="reset" disabled>Сбросить</button>
         </div>
         <p id="cat-hint" class="hint"></p>
-        <button type="button" class="chip" id="group-chip" hidden></button>
       </div>
 
       <!-- 2.3 Список записей -->
@@ -175,6 +167,7 @@
       <p class="footer__text">Составлен участниками локальной группы Киберкамбек.</p>
       <nav aria-label="Разделы сайта">
         <ul class="footer__nav">
+          <li><a href="../">Главная</a></li>
           <li><a href="#search">Поиск</a></li>
           <li><a href="#all-title">Все понятия</a></li>
           <li><a href="#suggest-form">Предложить мем</a></li>
